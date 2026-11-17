@@ -61,7 +61,7 @@ The LTC4417 connects the highest-priority pack inside its under/over-voltage win
 | Two P-FETs in parallel on each side of each channel | One FET per side, one larger FET, clip-on heatsinks | One FET would dissipate ~6.5 W and run away thermally. Two share it at ~1.6 W each and stay near 115 °C on copper alone |
 | 15 V cutoff measured under load, with 3.5 V of hysteresis | Higher cutoff, default 30 mV hysteresis | A loaded 15 V is about 3.36 V per cell at rest, safe for the cells. A higher cutoff would strand 10–15 % of each pack and miss the runtime target. The hysteresis keeps a rested pack from reconnecting |
 | SMCJ22CA input clamps | The SMBJ26CA shown in the controller's datasheet | The datasheet example interrupts ~2 A. This board interrupts ~26 A at every pack change, where the smaller part clamps near 50 V against a 42 V pin rating |
-| 100 pF filter on each UV pin | No filter, larger filter, a slew-rate network, input bulk capacitors | The only value that survives both a fresh pack taking over and the active pack being pulled out ([graph](#graphs)) |
+| 100 pF filter on each UV pin | No filter, larger filter, a slew-rate network, input bulk capacitors | 100 pF is the only standard value with margin in both bounding cases: a fresh pack taking over, and the active pack being removed ([graph](#graphs)) |
 | 4 × 470 µF hybrid capacitors | One 2000 µF electrolytic | Shares the ripple current across four parts, a quarter of the ESR, survives vibration, still works with one failed open |
 | Two-phase buck with a 100 % duty controller | Single phase, an off-the-shelf module | Halves the per-phase current and the input ripple. 100 % duty matters because 12 V out of a 13.5 V bus needs a duty cycle of 0.94 |
 | Shunt current sensing | Inductor DCR sensing | Current limit spread of 21.3–26.7 A instead of 15.5–26.4 A, which would trip at full load when hot |
@@ -71,15 +71,15 @@ Rejected options and the errors caught in validation: [docs/design-decisions.md]
 
 ## Graphs
 
-**Thresholds are set at worst-case tolerance.** Resistor tolerance, comparator accuracy and pin leakage are stacked for each trip point. A full pack must never be rejected, a rested drained pack must never be re-accepted, and the buck must stay on through a pack change.
+**Threshold tolerance bands.** Each trip point stacks resistor tolerance, comparator accuracy and pin leakage. The OV band sits above a full 21.0 V pack, the re-enable band sits above a rested pack (about 16.7 V), and the buck's turn-off band sits below the lowest bus voltage during a pack change.
 
 ![Threshold map](images/threshold-map.png)
 
-**The UV filter capacitor has a narrow window.** Too small, and the 82 A inrush when a fresh pack takes over pulls its own sense pin below cutoff. Too large, and the controller reacts too slowly when the active pack is pulled, so the bus falls below the buck's ride-through limit.
+**UV filter capacitor selection.** C_UV delays the under-voltage comparator, and two cases bound its value. When a fresh pack takes over, about 82 A of inrush pulls its sense pin under the UV threshold for roughly 170 µs. With no filter the pin reaches 14.4 V and the pack disconnects itself; 47 pF passes with 0.37 V of margin. When the active pack is removed, the same delay lets the bus keep falling before the next pack connects; at 220 pF it reaches 11.3 V, under the buck's 12.0 V ride-through limit. 100 pF leaves 1.17 V of margin in the first case and 0.81 V in the second.
 
 ![UV filter design window](images/uv-filter-window.png)
 
-**Loss budget: 12.3 W against 18.4 W allowed** (95 % at full load).
+**Buck loss budget.** 12.3 W calculated at full load against the 18.4 W that 95 % efficiency allows.
 
 ![Buck loss budget](images/buck-loss-budget.png)
 
@@ -90,10 +90,10 @@ Full math: [docs/calculations.md](docs/calculations.md)
 ## PCB
 
 - **Stackup:** 2 oz top, 2.8 mil prepreg, 0.5 oz ground plane, 48 mil core, 0.5 oz signal layer, 2.8 mil prepreg, 2 oz bottom.
-- **Power stays on the outer layers.** Each battery input, each FET mid-node, the shared VBUS bus and the 12 V output is a single-net pour. Via arrays under every FET drain tab carry heat and current through the board.
-- **The switching loop is closed locally.** Each phase has four 10 nF capacitors at the high-side drain, backed by four 10 µF capacitors, returning through the L2 plane.
-- **Sensing is Kelvin and shielded.** Current-sense pairs and gate/source pairs run on L3 under the ground plane, away from the switch nodes.
-- **Analog ground is an island** tied to power ground at one point under the controller.
+- **Power routing:** all high-current nets are single-net pours on the 2 oz outer layers (each battery input, each FET mid-node, VBUS, 12 V output). Via arrays stitch the battery-input pours through the board.
+- **Hot loop:** each phase has four 10 nF capacitors at the high-side drain and four 10 µF behind them, returning through the L2 plane.
+- **Sensing:** Kelvin current-sense pairs and gate/source pairs are routed on L3, under the ground plane and away from the switch nodes.
+- **Grounding:** separate analog ground pour, tied to power ground at a single point under the controller.
 
 Details: [docs/pcb-layout.md](docs/pcb-layout.md)
 
