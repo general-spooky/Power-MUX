@@ -9,9 +9,9 @@ A priority power path (LTC4417) drains three Milwaukee M18 packs one at a time. 
 
 ![Top layer of the board, coloured by function](images/layout-top-annotated.png)
 
-## At a glance
+## Overview
 
-| | |
+| Item | Specification |
 |---|---|
 | Input | 3 × Milwaukee M18 5 Ah (5S Li-ion), 15.0–21.0 V, one pack at a time in priority order |
 | Output | 12 V ±5 %, 29.2 A continuous (350 W) |
@@ -61,7 +61,7 @@ The LTC4417 connects the highest-priority pack inside its under/over-voltage win
 | Two P-FETs in parallel on each side of each channel | One FET per side, one larger FET, clip-on heatsinks | One FET would dissipate ~6.5 W and run away thermally. Two share it at ~1.6 W each and stay near 115 °C on copper alone |
 | 15 V cutoff measured under load, with 3.5 V of hysteresis | Higher cutoff, default 30 mV hysteresis | A loaded 15 V is about 3.36 V per cell at rest, safe for the cells. A higher cutoff would strand 10–15 % of each pack and miss the runtime target. The hysteresis keeps a rested pack from reconnecting |
 | SMCJ22CA input clamps | The SMBJ26CA shown in the controller's datasheet | The datasheet example interrupts ~2 A. This board interrupts ~26 A at every pack change, where the smaller part clamps near 50 V against a 42 V pin rating |
-| 100 pF filter on each UV pin | No filter, larger filter, a slew-rate network, input bulk capacitors | The only value that survives both a fresh pack taking over and the active pack being pulled out ([chart](#engineering-highlights)) |
+| 100 pF filter on each UV pin | No filter, larger filter, a slew-rate network, input bulk capacitors | The only value that survives both a fresh pack taking over and the active pack being pulled out ([graph](#graphs)) |
 | 4 × 470 µF hybrid capacitors | One 2000 µF electrolytic | Shares the ripple current across four parts, a quarter of the ESR, survives vibration, still works with one failed open |
 | Two-phase buck with a 100 % duty controller | Single phase, an off-the-shelf module | Halves the per-phase current and the input ripple. 100 % duty matters because 12 V out of a 13.5 V bus needs a duty cycle of 0.94 |
 | Shunt current sensing | Inductor DCR sensing | Current limit spread of 21.3–26.7 A instead of 15.5–26.4 A, which would trip at full load when hot |
@@ -69,7 +69,7 @@ The LTC4417 connects the highest-priority pack inside its under/over-voltage win
 
 Rejected options and the errors caught in validation: [docs/design-decisions.md](docs/design-decisions.md)
 
-## Engineering highlights
+## Graphs
 
 **Thresholds are set at worst-case tolerance.** Resistor tolerance, comparator accuracy and pin leakage are stacked for each trip point. A full pack must never be rejected, a rested drained pack must never be re-accepted, and the buck must stay on through a pack change.
 
