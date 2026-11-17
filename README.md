@@ -113,7 +113,7 @@ Schematic and layout were reviewed by practicing engineers from industry. Main c
 | Power-path FET junction | ≤ 125 °C | 115 °C worst case | pending |
 | Buck high-side FET junction | ≤ 150 °C | ≈ 126 °C plus heating from the inductor (estimate from the pre-review FET) | pending |
 
-Test procedures and pass criteria: [docs/validation-plan.md](docs/validation-plan.md)
+Bench test plan: [docs/validation-plan.md](docs/validation-plan.md)
 
 ## Repository
 
@@ -124,7 +124,7 @@ docs/
   calculations.md       worst-case math for every block
   pcb-layout.md         stackup, layer plan, layout rules
   design-review.md      review findings, failure modes, known limitations
-  validation-plan.md    bench tests and pass criteria
+  validation-plan.md    bench test plan: access, method, sequence, pass criteria
 hardware/
   altium/               Altium Designer project (schematics, PCB, libraries)
   bom.csv               bill of materials generated from the schematics
