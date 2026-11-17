@@ -4,18 +4,18 @@ Each choice, the alternatives, and the reason. Math: [calculations.md](calculati
 
 ## Requirements
 
-| ID | Requirement | Value |
-|---|---|---|
-| R1 | Inputs | 3 × Milwaukee M18 5 Ah packs (5S Li-ion), 15.0–21.0 V |
-| R2 | Load | 12 V, 350 W continuous (29.2 A): lights, fan supply, controllers |
-| R3 | Drain order | One pack at a time, priority 1 → 2 → 3, no current between packs |
-| R4 | Pack cutoff | 15.0 V at the board input |
-| R5 | Runtime | ≥ 30 min (hard requirement) |
-| R6 | Hot swap | Idle packs can be swapped while running |
-| R7 | Converter | Custom buck around a controller IC, efficiency ≥ 95 % |
-| R8 | Heat | No heatsink |
-| R9 | Integration | Power path and buck on one board |
-| R10 | Output tolerance | 12 V ±5 % |
+| Requirement | Value |
+|---|---|
+| Inputs | 3 × Milwaukee M18 5 Ah packs (5S Li-ion), 15.0–21.0 V |
+| Load | 12 V, 350 W continuous (29.2 A): lights, fan supply, controllers |
+| Drain order | One pack at a time, priority 1 → 2 → 3, no current between packs |
+| Pack cutoff | 15.0 V at the board input |
+| Runtime | ≥ 30 min (hard requirement) |
+| Hot swap | Idle packs can be swapped while running |
+| Converter | Custom buck around a controller IC, efficiency ≥ 95 % |
+| Heat | No heatsink |
+| Integration | Power path and buck on one board |
+| Output tolerance | 12 V ±5 % |
 
 ## Power path
 
