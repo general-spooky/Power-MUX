@@ -95,8 +95,6 @@ Full math: [docs/calculations.md](docs/calculations.md)
 - **Sensing is Kelvin and shielded.** Current-sense pairs and gate/source pairs run on L3 under the ground plane, away from the switch nodes.
 - **Analog ground is an island** tied to power ground at one point under the controller.
 
-![Inner signal layer](images/layout-l3-signals.png)
-
 Details: [docs/pcb-layout.md](docs/pcb-layout.md)
 
 ## Design review

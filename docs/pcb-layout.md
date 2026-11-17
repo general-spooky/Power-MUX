@@ -46,8 +46,6 @@ Power flows left to right in a straight line, which keeps every high-current pat
 - **Analog ground island.** The timing, soft-start, configuration, compensation and feedback parts sit on their own AGND pour beside the controller, joined to power ground at a single net-tie under the exposed pad.
 - **Thermal separation.** The inductors dissipate about 2.5 W each and sit next to the high-side FETs. Heat is steered in opposite directions: the FET drain copper extends away from the inductor, and the inductor's output-side pad carries the large pour toward the output.
 
-![Inner signal layer](../images/layout-l3-signals.png)
-
 ## Design rules
 
 | Rule | Value |
