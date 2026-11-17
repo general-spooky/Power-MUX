@@ -5,7 +5,7 @@
 A priority power path (LTC4417) drains three Milwaukee M18 packs one at a time. A two-phase synchronous buck (LM5137-Q1) converts the 15–21 V bus to 12 V at 29.2 A. Solo design: architecture, part selection, worst-case analysis, schematic and 4-layer layout in Altium Designer.
 
 > **Status: Rev A design complete. Bench validation pending.**
-> No hardware has been tested yet. Every performance number on this page is **calculated** from datasheet worst-case values, and each one is paired with the bench test that will confirm it ([validation plan](docs/validation-plan.md)).
+> No hardware tested yet. All performance numbers are **calculated** from datasheet worst-case values; the [validation plan](docs/validation-plan.md) lists the bench test for each.
 
 ![Top layer of the board, coloured by function](images/layout-top-annotated.png)
 
