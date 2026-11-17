@@ -61,7 +61,7 @@ Power flows left to right in a straight line, which keeps every high-current pat
 
 ## Known layout compromises
 
-These were accepted knowingly and are checked at bring-up.
+Checked at bring-up.
 
 | Item | Effect | Check |
 |---|---|---|

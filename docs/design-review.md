@@ -47,8 +47,6 @@ Issues identified in self-review and presented to the reviewers:
 
 ## Known limitations
 
-Stated up front, each with the plan that addresses it.
-
 1. **Runtime depends on an unmeasured number.** The 30 minute requirement needs about 63 Wh of usable energy per pack at 25 A; 70 Wh is assumed. *Plan: pack discharge test, first on the list.*
 2. **Buck high-side FET thermal margin is thin and rests on an assumed thermal resistance.** *Plan: thermocouples at full load for 30 minutes at both input-voltage extremes.*
 3. **No snubber provision on the switch nodes.** *Plan: probe the switch nodes at first power-up. If they ring, snubber footprints are added in a board revision.*

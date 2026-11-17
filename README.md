@@ -1,8 +1,8 @@
 # GLV Power MUX
 
-**Three hot-swappable tool batteries in, one regulated 12 V / 350 W rail out, for a Formula SAE electric car's low-voltage system.**
+**Low-voltage supply for a Formula SAE electric car: three hot-swappable battery packs in, 12 V / 350 W out.**
 
-A priority power path (LTC4417) drains three Milwaukee M18 packs one at a time, and a custom two-phase synchronous buck (LM5137-Q1) turns the 15–21 V battery bus into 12 V at up to 29.2 A. Designed solo in Altium Designer: architecture, part selection, worst-case analysis, schematic and 4-layer layout.
+A priority power path (LTC4417) drains three Milwaukee M18 packs one at a time. A two-phase synchronous buck (LM5137-Q1) converts the 15–21 V bus to 12 V at 29.2 A. Solo design: architecture, part selection, worst-case analysis, schematic and 4-layer layout in Altium Designer.
 
 > **Status: Rev A design complete. Bench validation pending.**
 > No hardware has been tested yet. Every performance number on this page is **calculated** from datasheet worst-case values, and each one is paired with the bench test that will confirm it ([validation plan](docs/validation-plan.md)).
@@ -25,13 +25,14 @@ A priority power path (LTC4417) drains three Milwaukee M18 packs one at a time, 
 
 ## The problem
 
-The car's low-voltage system used to be fed through diode-OR'd packs. Diodes waste about 11 W at this current, let packs at different charge levels share load unpredictably, and give the driver no way to know which pack to swap. The requirements for the replacement:
+The low-voltage system was fed through diode-OR'd packs: about 11 W lost in the diodes, uncontrolled load sharing between packs, and no indication of which pack to swap. Requirements for the replacement:
 
-- Drain **one pack at a time**, in a fixed order, with no current ever flowing between packs.
-- Allow idle packs to be swapped while the car is running.
-- Cut each pack off at 15.0 V under load, and never reconnect a drained pack when its voltage recovers at rest.
-- Hold 12 V ±5 % at 350 W for **at least 30 minutes**, with buck efficiency of at least 95 %.
-- Keep heat low enough to run without a heatsink, using inexpensive parts.
+- Drain one pack at a time in a fixed order, with no current between packs.
+- Idle packs swappable while running.
+- Disconnect each pack at 15.0 V under load, and never reconnect it when its voltage recovers at rest.
+- 12 V ±5 % at 350 W for at least 30 minutes.
+- Buck efficiency ≥ 95 %.
+- No heatsink.
 
 ## Architecture
 
@@ -50,13 +51,13 @@ flowchart LR
     BUCK --> OUT[12 V, 29.2 A to low-voltage loads]
 ```
 
-The LTC4417 connects the highest-priority pack whose voltage sits inside its under/over-voltage window, and stays on it until that pack hits its cutoff. It then opens that channel, waits a couple of microseconds, and closes the next one. The bulk capacitors carry the load across the gap. Because the buck is a constant-power load, pack current rises as the pack drains (17.5 A fresh, 25.6 A at cutoff), which drives most of the worst-case numbers below.
+The LTC4417 connects the highest-priority pack inside its under/over-voltage window and holds it until cutoff. It then opens that channel and closes the next after a break-before-make gap of a few microseconds, during which the bulk capacitors carry the load. The buck is a constant-power load, so pack current rises as the pack drains: 17.5 A fresh, 25.6 A at cutoff. The worst-case numbers are set at the end of a pack.
 
 ## Design decisions
 
 | Decision | Alternatives considered | Why |
 |---|---|---|
-| Priority switching with back-to-back FETs | Diode-OR, paralleling packs | About 4.3 W of path loss instead of ~11 W, no pack-to-pack current, and reverse-polarity blocking for free |
+| Priority switching with back-to-back FETs | Diode-OR, paralleling packs | About 4.3 W of path loss instead of ~11 W, no pack-to-pack current, and reverse-polarity blocking |
 | Two P-FETs in parallel on each side of each channel | One FET per side, one larger FET, clip-on heatsinks | One FET would dissipate ~6.5 W and run away thermally. Two share it at ~1.6 W each and stay near 115 °C on copper alone |
 | 15 V cutoff measured under load, with 3.5 V of hysteresis | Higher cutoff, default 30 mV hysteresis | A loaded 15 V is about 3.36 V per cell at rest, safe for the cells. A higher cutoff would strand 10–15 % of each pack and miss the runtime target. The hysteresis keeps a rested pack from reconnecting |
 | SMCJ22CA input clamps | The SMBJ26CA shown in the controller's datasheet | The datasheet example interrupts ~2 A. This board interrupts ~26 A at every pack change, where the smaller part clamps near 50 V against a 42 V pin rating |
@@ -66,25 +67,25 @@ The LTC4417 connects the highest-priority pack whose voltage sits inside its und
 | Shunt current sensing | Inductor DCR sensing | Current limit spread of 21.3–26.7 A instead of 15.5–26.4 A, which would trip at full load when hot |
 | 4 layers, solid ground on L2 | 2 layers | The switching loop returns directly under the top layer, which keeps the hot-loop inductance low enough for 40 V FETs |
 
-The full reasoning, including the options that were rejected and the mistakes caught along the way, is in [docs/design-decisions.md](docs/design-decisions.md).
+Rejected options and the errors caught in validation: [docs/design-decisions.md](docs/design-decisions.md)
 
 ## Engineering highlights
 
-**Every threshold is designed at worst-case tolerance, not nominal.** Resistor tolerance, comparator accuracy and pin leakage are stacked for each trip point. The bands may not overlap the events they have to separate: a full pack must never be rejected, a rested drained pack must never be re-accepted, and the buck must stay on through a pack change.
+**Thresholds are set at worst-case tolerance.** Resistor tolerance, comparator accuracy and pin leakage are stacked for each trip point. A full pack must never be rejected, a rested drained pack must never be re-accepted, and the buck must stay on through a pack change.
 
 ![Threshold map](images/threshold-map.png)
 
-**The UV filter capacitor has a narrow window.** Too small, and the 82 A inrush into the bus when a fresh pack takes over dips its own sense pin below the cutoff. Too large, and the controller reacts too slowly when the active pack is pulled, so the bus falls below what the buck can ride through.
+**The UV filter capacitor has a narrow window.** Too small, and the 82 A inrush when a fresh pack takes over pulls its own sense pin below cutoff. Too large, and the controller reacts too slowly when the active pack is pulled, so the bus falls below the buck's ride-through limit.
 
 ![UV filter design window](images/uv-filter-window.png)
 
-**The loss budget closes with margin.** The 95 % requirement allows 18.4 W of loss at full load.
+**Loss budget: 12.3 W against 18.4 W allowed** (95 % at full load).
 
 ![Buck loss budget](images/buck-loss-budget.png)
 
 *The two FET rows were computed for the 5 × 6 mm FET used before the design review (3.5 mΩ max at 4.5 V gate drive). The TO-252 part that replaced it has a comparable on-resistance (2.6 mΩ typical at 4.5 V), so the budget is expected to hold. Measured efficiency will replace this chart.*
 
-All of the math, with formulas, source values and results, is in [docs/calculations.md](docs/calculations.md).
+Full math: [docs/calculations.md](docs/calculations.md)
 
 ## PCB
 
@@ -100,7 +101,7 @@ Details: [docs/pcb-layout.md](docs/pcb-layout.md)
 
 ## Design review
 
-The schematic and layout were reviewed by practicing engineers from industry. The most significant change was replacing the buck FETs with a single-pad TO-252 part to simplify the high-current routing. The review notes, the failure-mode table and the list of known limitations are in [docs/design-review.md](docs/design-review.md).
+Schematic and layout were reviewed by practicing engineers from industry. Main change: the buck FETs were replaced with a single-pad TO-252 part to simplify the high-current routing. Review notes, failure modes and known limitations: [docs/design-review.md](docs/design-review.md)
 
 ## Validation status
 

@@ -1,6 +1,6 @@
 # Design decisions
 
-What was chosen, what it was chosen over, and why. The supporting math is in [calculations.md](calculations.md).
+Each choice, the alternatives, and the reason. Math: [calculations.md](calculations.md)
 
 ## Requirements
 
@@ -12,16 +12,16 @@ What was chosen, what it was chosen over, and why. The supporting math is in [ca
 | R4 | Pack cutoff | 15.0 V at the board input |
 | R5 | Runtime | ≥ 30 min (hard requirement) |
 | R6 | Hot swap | Idle packs can be swapped while running |
-| R7 | Converter | Custom buck around a controller IC, low cost, efficiency ≥ 95 % |
-| R8 | Heat | Minimized; no heatsink |
-| R9 | Parts | Must have ECAD models; power path and buck on one board |
+| R7 | Converter | Custom buck around a controller IC, efficiency ≥ 95 % |
+| R8 | Heat | No heatsink |
+| R9 | Integration | Power path and buck on one board |
 | R10 | Output tolerance | 12 V ±5 % |
 
 ## Power path
 
 ### Priority switching instead of diode-OR
 
-Diode-OR is simple, but each diode drops about 0.5 V, which is 11 W at the average pack current and 14 W at end of pack. It also lets whichever pack is highest supply the load, so packs drain together and there is no clear "swap this one" signal. The LTC4417 connects one input at a time through back-to-back P-channel FETs. Path loss falls to about 4.3 W, packs never feed each other, and a reversed pack is blocked by the FET pair.
+In a diode-OR each diode drops about 0.5 V, which is 11 W at the average pack current and 14 W at end of pack. It also lets whichever pack is highest supply the load, so packs drain together and there is no clear "swap this one" signal. The LTC4417 connects one input at a time through back-to-back P-channel FETs. Path loss falls to about 4.3 W, packs never feed each other, and a reversed pack is blocked by the FET pair.
 
 ### FET selection by on-resistance at 4.5 V
 
@@ -30,10 +30,10 @@ The LTC4417 clamps its gate drive and only guarantees 4.5 V. A FET's headline cu
 | Candidate | R_DS(on) at −4.5 V | Outcome |
 |---|---|---|
 | FDS4685 (used in the controller's datasheet examples) | 35 mΩ | Rejected: would need 36 FETs and still lose 11 W |
-| Vishay SQJ147ELP | 18 mΩ | Fallback at three per side; no ECAD model for the exact part |
+| Vishay SQJ147ELP | 18 mΩ | Fallback at three per side |
 | Infineon IPB180P04P4L-02 | 3.9 mΩ | Rejected on cost |
 | Toshiba XPH4R714MC | 6.9 mΩ | Runner-up, smaller 5 × 5 mm package |
-| **Toshiba TJ90S04M3L** | **6.0 mΩ** | **Chosen: large DPAK+ tab, 0.83 °C/W junction to case, ECAD available** |
+| **Toshiba TJ90S04M3L** | **6.0 mΩ** | **Chosen: large DPAK+ tab, 0.83 °C/W junction to case** |
 
 ### Two FETs in parallel per side
 
@@ -92,9 +92,9 @@ Sensing across the inductor's own resistance saves two parts but inherits copper
 | Candidate | Outcome |
 |---|---|
 | Würth WE-HCI ferrite, 6.8 µH | Rejected: ferrite saturates abruptly near the current limit, worse when hot |
-| CODACA CSBX1809-6R8M | Electrically good, lowest resistance, but no ECAD model |
-| Coilcraft XAL1510 | Passes, too expensive |
-| **Vishay IHLP6767GZ, 6.8 µH** | **Chosen: soft saturation, holds 90 % of its inductance at 20 A, ECAD available** |
+| CODACA CSBX1809-6R8M | Lowest resistance; no verified footprint available |
+| Coilcraft XAL1510 | Passes; rejected on cost |
+| **Vishay IHLP6767GZ, 6.8 µH** | **Chosen: soft saturation, holds 90 % of its inductance at 20 A** |
 
 The trade is copper loss: the IHLP has about twice the resistance of the CODACA part, costing roughly 2.3 W. Efficiency still clears 95 %, and the layout separates the inductors thermally from the high-side FETs.
 
@@ -118,7 +118,7 @@ On a two-layer board the switching current's return path is far from its forward
 
 ### 2 oz outside, 0.5 oz inside
 
-Current and heat stay on the outer layers. The inner layers only provide the reference plane and a quiet routing layer, so thin copper is enough and costs less.
+Current and heat stay on the outer layers. The inner layers only provide the reference plane and a quiet routing layer, so thin copper is enough.
 
 ## Mistakes caught during validation
 
@@ -133,5 +133,3 @@ Each of these passed a first check at nominal values and failed when the whole d
 | UV filter capacitor far too large | Time-step model showed the bus collapsing when the active pack is removed | tens of nF → 100 pF |
 | Buck turn-on threshold impossible to meet | The controller's ±5 % enable tolerance did not fit the originally derived window | Window redefined; soft-start lengthened to 20 ms to cover the case it had protected |
 | Inductor chosen before the controller | Slope compensation and current limit needed a different value and saturation rating | 5.5 µH → 6.8 µH, saturation ≥ 27 A |
-
-The common lesson: a part value copied from a reference design is only valid at that design's operating point, and a check at nominal values is not a check.
